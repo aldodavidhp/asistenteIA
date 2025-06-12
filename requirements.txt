@@ -2,3 +2,4 @@ streamlit
 google.generativeai
 PyPDF2
 pyttsx3
+speech_recognition

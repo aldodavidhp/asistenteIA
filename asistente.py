@@ -18,7 +18,7 @@ if 'question_input' not in st.session_state: # Usamos la misma clave que el widg
 
 # --- Configuración de la página ---
 st.set_page_config(
-    page_title="NeuroeXpand - Asistente Clínico",
+    page_title="ItzAI - Asistente Clínico",
     page_icon="🤖",
     layout="centered"
 )
@@ -121,6 +121,24 @@ def generate_medical_response(pdf_text, question):
     prompt = f"""
     Eres un médico experto analizando historias clínicas. Responde la siguiente pregunta 
     basándote EXCLUSIVAMENTE en la información proporcionada en el expediente clínico.
+        Formato de respuesta requerido:
+    
+    **NEURO-ANÁLISIS | NeuroeXpand IA**
+    **Fecha**: {datetime.now().strftime('%d/%m/%Y %H:%M')}
+    **Consulta**: {question[:100]}{'...' if len(question) > 100 else ''}
+    
+    **Hallazgos Clínicos**:
+    - [Análisis detallado de los hallazgos relevantes]
+    
+    **Evaluación Neurológica**:
+    - [Interpretación de los datos neurológicos]
+    
+    **Recomendaciones**:
+    - [Sugerencias basadas en la evidencia]
+    
+    **Tecnologías Aplicables**:
+    - [Posibles estudios complementarios: EEG, PSG, BCI, etc.]
+    
     
     Documento médico:
     {pdf_text[:15000]}
@@ -169,7 +187,7 @@ def main():
     # --- Header corporativo ---
     st.markdown("""
     <div class="header">
-        <h1 style="margin:0; color:white;">🧑‍⚕️💻 NeuroeXpand</h1>
+        <h1 style="margin:0; color:white;">🧑‍⚕️💻 ItzAI</h1>
         <p style="margin:0; opacity:0.9;">Asistente Clínico Inteligente</p>
     </div>
     """, unsafe_allow_html=True)

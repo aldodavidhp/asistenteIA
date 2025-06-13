@@ -18,7 +18,7 @@ if 'question_input' not in st.session_state: # Usamos la misma clave que el widg
 
 # --- Configuración de la página ---
 st.set_page_config(
-    page_title="ItzAI - Asistente Clínico",
+    page_title="iTziA - Asistente Clínico",
     page_icon="🤖",
     layout="centered"
 )
@@ -123,7 +123,7 @@ def generate_medical_response(pdf_text, question):
     basándote EXCLUSIVAMENTE en la información proporcionada en el expediente clínico.
         Formato de respuesta requerido:
     
-    **EXPEDIENTE | ItzIA**
+    **EXPEDIENTE | iTziA**
     **Fecha**: {datetime.now().strftime('%d/%m/%Y %H:%M')}
     **Consulta**: {question[:100]}{'...' if len(question) > 100 else ''}
     
@@ -187,7 +187,7 @@ def main():
     # --- Header corporativo ---
     st.markdown("""
     <div class="header">
-        <h1 style="margin:0; color:white;">🧑‍⚕️💻 ItzAI</h1>
+        <h1 style="margin:0; color:white;">🧑‍⚕️💻 iTziA</h1>
         <p style="margin:0; opacity:0.9;">Asistente Clínico Inteligente</p>
     </div>
     """, unsafe_allow_html=True)
@@ -201,7 +201,7 @@ def main():
                 margin-top: 20px;">
         <h3 style="color: #3a5a80; margin-top:0;">Instrucciones</h3>
         <ol style="color: #495057;">
-            <li style="margin-bottom: 8px;">🔔 La información es extraída de fuentes autorizadas por ItzAI</li>
+            <li style="margin-bottom: 8px;">🔔 La información es extraída de fuentes autorizadas por iTziA</li>
             <li style="margin-bottom: 8px;">⌨️ Escribe tu consulta en el área de texto</li>
             <li style="margin-bottom: 8px;">📄 Integra la información que requieras para analizar con IA</li>
         </ol>
@@ -234,7 +234,7 @@ def main():
     # --- Botón principal de consulta ---
     # Usa on_click para llamar a la función que procesa y limpia
     st.button(
-        "🔍 Analizar con NeuroeXpand", 
+        "🔍 Analizar con iTziA", 
         type="primary", 
         key="main_button",
         on_click=on_analyze_click # Asigna el callback aquí

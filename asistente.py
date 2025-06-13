@@ -207,7 +207,7 @@ def main():
     # Usamos st.session_state.question_input directamente como value
     # para que el textarea se limpie mediante el callback.
     st.text_area(
-        "¿En qué puedo ayudarte?:", 
+        "¿En qué puedo ayudarte?", 
         value=st.session_state.get('question_input', ''), 
         height=100,
         placeholder="Ingrese su pregunta médica aquí...",

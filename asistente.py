@@ -123,7 +123,7 @@ def generate_medical_response(pdf_text, question):
     basándote EXCLUSIVAMENTE en la información proporcionada en el expediente clínico.
         Formato de respuesta requerido:
     
-    **NEURO-ANÁLISIS | NeuroeXpand IA**
+    **EXPEDIENTE | ItzIA**
     **Fecha**: {datetime.now().strftime('%d/%m/%Y %H:%M')}
     **Consulta**: {question[:100]}{'...' if len(question) > 100 else ''}
     

@@ -121,23 +121,6 @@ def generate_medical_response(pdf_text, question):
     prompt = f"""
     Eres un médico experto analizando historias clínicas. Responde la siguiente pregunta 
     basándote EXCLUSIVAMENTE en la información proporcionada en el expediente clínico.
-        Formato de respuesta requerido:
-    
-    **EXPEDIENTE | iTziA**
-    **Fecha**: {datetime.now().strftime('%d/%m/%Y %H:%M')}
-    **Consulta**: {question[:100]}{'...' if len(question) > 100 else ''}
-    
-    **Hallazgos Clínicos**:
-    - [Análisis detallado de los hallazgos relevantes]
-    
-    **Evaluación Neurológica**:
-    - [Interpretación de los datos neurológicos]
-    
-    **Recomendaciones**:
-    - [Sugerencias basadas en la evidencia]
-    
-    **Tecnologías Aplicables**:
-    - [Posibles estudios complementarios: EEG, PSG, BCI, etc.]
     
     
     Documento médico:
@@ -218,13 +201,13 @@ def main():
     if not pdf_text:
         return 
     
-    st.markdown("### Realizar consulta")
+    st.markdown("### Dr. Estrada")
     
     # --- Sección de entrada de texto (sin botón de voz) ---
     # Usamos st.session_state.question_input directamente como value
     # para que el textarea se limpie mediante el callback.
     st.text_area(
-        "Escriba su pregunta:", 
+        "¿En qué puedo ayudarte?:", 
         value=st.session_state.get('question_input', ''), 
         height=100,
         placeholder="Ingrese su pregunta médica aquí...",

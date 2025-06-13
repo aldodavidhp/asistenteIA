@@ -201,7 +201,7 @@ def main():
                 margin-top: 20px;">
         <h3 style="color: #3a5a80; margin-top:0;">Instrucciones</h3>
         <ol style="color: #495057;">
-            <li style="margin-bottom: 8px;">🔔 La información es extraída de fuentes autorizadas por NeuroXpand</li>
+            <li style="margin-bottom: 8px;">🔔 La información es extraída de fuentes autorizadas por ItzAI</li>
             <li style="margin-bottom: 8px;">⌨️ Escribe tu consulta en el área de texto</li>
             <li style="margin-bottom: 8px;">📄 Integra la información que requieras para analizar con IA</li>
         </ol>

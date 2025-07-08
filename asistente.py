@@ -4,21 +4,21 @@ import PyPDF2
 import google.generativeai as genai
 from datetime import datetime
 
-# --- Configuración persistente del estado (sin voz) ---
+# --- Configuración persistente del estado ---
 if 'last_response' not in st.session_state:
     st.session_state.last_response = None
 if 'last_question' not in st.session_state:
     st.session_state.last_question = ""
-# 'voice_output' y 'voice_engine_instance' ya no son necesarios, se eliminan.
-
-# **IMPORTANTE: Clave para el valor del text_area**
-# Se mantiene esta clave para controlar el text_area
-if 'question_input' not in st.session_state: # Usamos la misma clave que el widget para simplificar
+if 'question_input' not in st.session_state:
     st.session_state.question_input = ""
+if 'protocol_pdf_text' not in st.session_state: # Nuevo para el texto del protocolo
+    st.session_state.protocol_pdf_text = None
+if 'hc_pdf_text' not in st.session_state: # Nuevo para el texto del HC
+    st.session_state.hc_pdf_text = None
 
 # --- Configuración de la página ---
 st.set_page_config(
-    page_title="iTziA - Asistente Clínico",
+    page_title="iTziA - Asistente Clínico",
     page_icon="🤖",
     layout="centered"
 )
@@ -52,7 +52,7 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(58, 90, 128, 0.1);
     }
     
-    /* Botón de voz (este estilo se podría eliminar si no hay botón de voz) */
+    /* Botón secundario (si hubiera más) */
     .stButton>button:nth-of-type(2) { 
         background-color: #f8f9fa;
         color: #4a6fa5;
@@ -94,40 +94,64 @@ st.markdown("""
         border-left: 4px solid #4a6fa5;
         margin-top: 20px;
     }
+    
+    /* Estilo para el uploader de archivos */
+    .stFileUploader>div>div {
+        border: 2px dashed #4a6fa5;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        background-color: #e6f0fa;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # --- Configurar la API de Gemini ---
 def configure_genai():
-    genai.configure(api_key="AIzaSyAzPOlBiKoXpqFRLFzG6z_wuqPLE-aay4c")  # Reemplaza con tu API key
+    # Asegúrate de reemplazar "TU_API_KEY_AQUI" con tu clave real de la API de Google Gemini
+    genai.configure(api_key="TU_API_KEY_AQUI")
 
 # --- Extraer texto de PDF ---
-def extract_text_from_pdf(pdf_path):
+def extract_text_from_pdf(uploaded_file):
     text = ""
-    try:
-        with open(pdf_path, "rb") as file:
-            reader = PyPDF2.PdfReader(file)
+    if uploaded_file is not None:
+        try:
+            # PyPDF2 puede leer directamente del objeto BytesIO de Streamlit
+            reader = PyPDF2.PdfReader(uploaded_file)
             for page in reader.pages:
                 text += page.extract_text() or ""
-        return text
-    except Exception as e:
-        st.error(f"Error al leer PDF: {e}")
-        return None
+            return text
+        except Exception as e:
+            st.error(f"Error al leer PDF: {e}")
+            return None
+    return None
 
 # --- Generar respuesta médica formateada ---
-def generate_medical_response(pdf_text, question):
+def generate_medical_response(hc_text, protocol_text, question):
     model = genai.GenerativeModel('gemini-2.0-flash-exp')
     
     prompt = f"""
-    Eres un médico experto analizando historias clínicas. Responde la siguiente pregunta 
-    basándote EXCLUSIVAMENTE en la información proporcionada en el expediente clínico.
+    Eres un médico experto analizando información clínica. Responde la siguiente pregunta
+    basándote EXCLUSIVAMENTE en la información proporcionada en el o los documentos.
+
+    """
+    if hc_text:
+        prompt += f"""
+        Documento de Historial Clínico (HC):
+        {hc_text[:15000]}
+        """
+    if protocol_text:
+        prompt += f"""
+        Documento de Protocolo de Reconstrucción Articular (Cadera/Rodilla):
+        {protocol_text[:15000]}
+        """
     
-    
-    Documento médico:
-    {pdf_text[:15000]}
+    prompt += f"""
     
     Pregunta:
     {question}
+    
+    Si la pregunta requiere analizar ambos documentos, integra la información de forma coherente y profesional.
     """
     
     try:
@@ -137,29 +161,23 @@ def generate_medical_response(pdf_text, question):
         st.error(f"Error en IA: {e}")
         return None
 
-# --- FUNCIONES DE CALLBACK (Solo para el botón de análisis) ---
+# --- FUNCIONES DE CALLBACK ---
 
 def on_analyze_click():
-    # Obtiene la pregunta actual del text_area (su valor está en st.session_state.question_input)
     current_question = st.session_state.question_input
-
+    
     # Limpia el text_area en session_state *antes* de que se re-renderice
     st.session_state.question_input = "" 
     
-    # Procesa la pregunta y genera la respuesta
-    pdf_path = "HC.pdf"
-    if not os.path.exists(pdf_path):
-        st.error(f"Archivo no encontrado: {pdf_path}")
-        st.session_state.last_response = "Error: Archivo PDF no encontrado."
-        return
+    hc_text_to_analyze = st.session_state.hc_pdf_text
+    protocol_text_to_analyze = st.session_state.protocol_pdf_text
 
-    pdf_text = extract_text_from_pdf(pdf_path)
-    if not pdf_text:
-        st.session_state.last_response = "Error: No se pudo extraer texto del PDF."
+    if not hc_text_to_analyze and not protocol_text_to_analyze:
+        st.session_state.last_response = "Error: Por favor, carga al menos un documento PDF (Historial Clínico o Protocolo)."
         return
 
     with st.spinner("Procesando consulta..."):
-        response = generate_medical_response(pdf_text, current_question)
+        response = generate_medical_response(hc_text_to_analyze, protocol_text_to_analyze, current_question)
         st.session_state.last_response = response
         st.session_state.last_question = "" # Limpia la "última pregunta" si es necesario
 
@@ -175,7 +193,7 @@ def main():
     </div>
     """, unsafe_allow_html=True)
     
-    # --- Barra lateral con instrucciones (sin opción de voz) ---
+    # --- Barra lateral con instrucciones ---
     st.sidebar.markdown("""
     <div style="background: #f8f9fa; 
                 padding: 15px; 
@@ -185,42 +203,70 @@ def main():
         <h3 style="color: #3a5a80; margin-top:0;">Instrucciones</h3>
         <ol style="color: #495057;">
             <li style="margin-bottom: 8px;">🔔 La información es extraída de fuentes autorizadas por iTziA</li>
-            <li style="margin-bottom: 8px;">⌨️ Escribe tu consulta en el área de texto</li>
-            <li style="margin-bottom: 8px;">📄 Integra la información que requieras para analizar con IA</li>
+            <li style="margin-bottom: 8px;">⬆️ Sube los PDFs necesarios (Historial Clínico y/o Protocolo).</li>
+            <li style="margin-bottom: 8px;">⌨️ Escribe tu consulta en el área de texto.</li>
+            <li style="margin-bottom: 8px;">🤝 Si pides un análisis conjunto, iTziA combinará la información.</li>
         </ol>
     </div>
     """, unsafe_allow_html=True)
     
-    # --- Cargar PDF (ajustar ruta) ---
-    PDF_PATH = "HC.pdf"
-    if not os.path.exists(PDF_PATH):
-        st.error(f"Archivo no encontrado: {PDF_PATH}")
-        return
-    
-    pdf_text = extract_text_from_pdf(PDF_PATH)
-    if not pdf_text:
-        return 
-    
     st.markdown("### Dr. Estrada")
     
-    # --- Sección de entrada de texto (sin botón de voz) ---
-    # Usamos st.session_state.question_input directamente como value
-    # para que el textarea se limpie mediante el callback.
+    # --- Sección de carga de Historial Clínico (HC) ---
+    st.subheader("Cargar Historial Clínico (HC)")
+    uploaded_hc_file = st.file_uploader(
+        "Sube el archivo PDF del Historial Clínico (HC)", 
+        type="pdf", 
+        key="hc_uploader"
+    )
+    
+    if uploaded_hc_file is not None:
+        st.session_state.hc_pdf_text = extract_text_from_pdf(uploaded_hc_file)
+        if st.session_state.hc_pdf_text:
+            st.success("Historial Clínico cargado correctamente.")
+        else:
+            st.error("No se pudo extraer texto del Historial Clínico. Asegúrate de que el PDF sea de texto y no una imagen.")
+    elif 'hc_pdf_text' in st.session_state and st.session_state.hc_pdf_text:
+        st.info("Historial Clínico cargado previamente.")
+    else:
+        st.info("No se ha cargado ningún Historial Clínico.")
+
+    # --- NUEVA Sección de carga de Protocolo de Reconstrucción Articular ---
+    st.subheader("Cargar Protocolo de Reconstrucción Articular")
+    uploaded_protocol_file = st.file_uploader(
+        "Sube el archivo PDF del Protocolo de Reconstrucción Articular (Cadera/Rodilla)", 
+        type="pdf", 
+        key="protocol_uploader"
+    )
+
+    if uploaded_protocol_file is not None:
+        st.session_state.protocol_pdf_text = extract_text_from_pdf(uploaded_protocol_file)
+        if st.session_state.protocol_pdf_text:
+            st.success("Protocolo de Reconstrucción Articular cargado correctamente.")
+        else:
+            st.error("No se pudo extraer texto del Protocolo. Asegúrate de que el PDF sea de texto y no una imagen.")
+    elif 'protocol_pdf_text' in st.session_state and st.session_state.protocol_pdf_text:
+        st.info("Protocolo de Reconstrucción Articular cargado previamente.")
+    else:
+        st.info("No se ha cargado ningún Protocolo de Reconstrucción Articular.")
+
+    st.markdown("---")
+    
+    # --- Sección de entrada de texto ---
     st.text_area(
-        "¿En qué puedo ayudarte?", 
+        "¿En qué puedo ayudarte? (Ej: 'Analiza el HC y el protocolo para el paciente Juan Pérez y sugiere pasos.')", 
         value=st.session_state.get('question_input', ''), 
         height=100,
         placeholder="Ingrese su pregunta médica aquí...",
-        key="question_input" # Esta es la clave del widget y también la que controla su valor en session_state
+        key="question_input"
     )
     
     # --- Botón principal de consulta ---
-    # Usa on_click para llamar a la función que procesa y limpia
     st.button(
         "🔍 Analizar con iTziA", 
         type="primary", 
         key="main_button",
-        on_click=on_analyze_click # Asigna el callback aquí
+        on_click=on_analyze_click
     )
     
     # --- Mostrar respuesta si existe ---

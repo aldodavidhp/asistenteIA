@@ -107,7 +107,7 @@ st.markdown("""
 # --- Configurar la API de Gemini ---
 def configure_genai():
     # Asegúrate de reemplazar "TU_API_KEY_AQUI" con tu clave real de la API de Google Gemini
-    genai.configure(api_key="TU_API_KEY_AQUI")
+    genai.configure(api_key="AIzaSyAzPOlBiKoXpqFRLFzG6z_wuqPLE-aay4c")
 
 # --- Extraer texto de PDF ---
 def extract_text_from_pdf(pdf_source):

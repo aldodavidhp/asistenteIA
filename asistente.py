@@ -216,12 +216,6 @@ def main():
         # --- Secciones desplegables en la columna izquierda ---
         with st.expander("**⚙️ Configuración y Carga de Documentos**"):
             st.markdown("---") # Separador visual para el expander
-            st.markdown("**Estado del Historial Clínico:**")
-            if st.session_state.hc_pdf_text:
-                st.info(f"Historial Clínico (HC.pdf) cargado desde `{PDF_HC_PATH}`.")
-            else:
-                st.warning("Historial Clínico (HC.pdf) no cargado o sin texto.")
-
             st.markdown("---") # Separador visual
 
             # --- Sección de carga de Protocolo de Reconstrucción Articular ---

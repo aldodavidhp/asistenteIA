@@ -215,7 +215,7 @@ def main():
     with col_left:
         # --- Secciones desplegables en la columna izquierda ---
         with st.expander("**⚙️ Configuración y Carga de Documentos**"):
-            st.markdown("---") # Separador visual para el expander
+
             st.markdown("---") # Separador visual
 
             # --- Sección de carga de Protocolo de Reconstrucción Articular ---
@@ -259,7 +259,7 @@ def main():
                     <li style="margin-bottom: 8px;">**2. Usar Protocolo:** Si has cargado un protocolo y quieres que iTziA lo tenga en cuenta en su respuesta, asegúrate de **marcar la casilla** '✅ Complementar con el Protocolo'.</li>
                     <li style="margin-bottom: 8px;">**3. Haz tu Pregunta:** Escribe tu consulta médica en el área de texto de la derecha.</li>
                     <li style="margin-bottom: 8px;">**4. Analizar:** Haz clic en '🔍 Analizar con iTziA' para obtener una respuesta informada.</li>
-                    <li style="margin-bottom: 8px;">🔔 **Importante:** iTziA basa sus respuestas en los documentos proporcionados.</li>
+                    <li style="margin-bottom: 8px;">🔔 **Importante:** iTziA basa sus respuestas en el expediente clínico.</li>
                 </ol>
             </div>
             """, unsafe_allow_html=True)

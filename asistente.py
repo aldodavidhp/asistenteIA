@@ -22,7 +22,7 @@ if 'use_protocol_for_analysis' not in st.session_state: # Nuevo para la opción 
 st.set_page_config(
     page_title="iTziA - Asistente Clínico",
     page_icon="🤖",
-    layout="centered" # Cambiado a 'wide' si se quiere más espacio, 'centered' es el predeterminado
+    layout="wide" # Cambiado a 'wide' para aprovechar mejor el espacio con dos columnas
 )
 
 # --- Estilos CSS personalizados para diseño profesional ---
@@ -94,6 +94,13 @@ st.markdown("""
         text-align: center;
         background-color: #e6f0fa;
     }
+    /* Estilo para los títulos de las columnas */
+    .st-emotion-cache-1kyxreq { /* Esta es una clase generada por Streamlit, puede cambiar con versiones */
+        font-weight: bold;
+        color: #4a6fa5;
+        margin-bottom: 15px;
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -187,92 +194,97 @@ def main():
     </div>
     """, unsafe_allow_html=True)
     
-    # --- Estructura principal sin columnas para reubicar elementos ---
-    
-    st.markdown("### Dr. Estrada")
-    
-    # --- Cargar PDF del Historial Clínico (fijo) ---
-    PDF_HC_PATH = "HC.pdf"
-    if not os.path.exists(PDF_HC_PATH):
-        st.error(f"Error: Archivo de Historial Clínico no encontrado en la ruta fija: {PDF_HC_PATH}. Por favor, asegúrate de que 'HC.pdf' esté presente.")
-        st.session_state.hc_pdf_text = None
-    else:
-        if st.session_state.hc_pdf_text is None: # Solo carga si no se ha cargado antes
-            st.session_state.hc_pdf_text = extract_text_from_pdf(PDF_HC_PATH)
-            if st.session_state.hc_pdf_text:
-                st.success(f"Historial Clínico (HC.pdf) cargado desde {PDF_HC_PATH}.")
+    # --- Estructura con dos columnas principales ---
+    col_left, col_right = st.columns([1, 2]) # Ajusta las proporciones si es necesario
+
+    with col_left:
+        st.markdown("### Dr. Estrada")
+        
+        # --- Cargar PDF del Historial Clínico (fijo) ---
+        PDF_HC_PATH = "HC.pdf"
+        st.subheader("Historial Clínico (HC)")
+        if not os.path.exists(PDF_HC_PATH):
+            st.error(f"Error: Archivo de Historial Clínico no encontrado en la ruta fija: {PDF_HC_PATH}. Por favor, asegúrate de que 'HC.pdf' esté presente.")
+            st.session_state.hc_pdf_text = None
+        else:
+            if st.session_state.hc_pdf_text is None: # Solo carga si no se ha cargado antes
+                st.session_state.hc_pdf_text = extract_text_from_pdf(PDF_HC_PATH)
+                if st.session_state.hc_pdf_text:
+                    st.success(f"Historial Clínico (HC.pdf) cargado desde {PDF_HC_PATH}.")
+                else:
+                    st.error(f"No se pudo extraer texto del Historial Clínico (HC.pdf). Asegúrate de que el PDF sea de texto.")
             else:
-                st.error(f"No se pudo extraer texto del Historial Clínico (HC.pdf). Asegúrate de que el PDF sea de texto.")
+                st.info(f"Historial Clínico (HC.pdf) ya está cargado desde {PDF_HC_PATH}.")
+
+        st.markdown("---") # Separador visual
+
+        # --- Sección de carga de Protocolo de Reconstrucción Articular (ahora en la columna izquierda) ---
+        st.subheader("Protocolo de Reconstrucción Articular")
+        uploaded_protocol_file = st.file_uploader(
+            "Sube el archivo PDF del Protocolo (Cadera/Rodilla)", 
+            type="pdf", 
+            key="protocol_uploader"
+        )
+
+        if uploaded_protocol_file is not None:
+            st.session_state.protocol_pdf_text = extract_text_from_pdf(uploaded_protocol_file)
+            if st.session_state.protocol_pdf_text:
+                st.success("Protocolo de Reconstrucción Articular cargado.")
+            else:
+                st.error("No se pudo extraer texto del Protocolo. Asegúrate de que el PDF sea de texto y no una imagen.")
+        elif 'protocol_pdf_text' in st.session_state and st.session_state.protocol_pdf_text:
+            st.info("Protocolo de Reconstrucción Articular cargado previamente.")
         else:
-            st.info(f"Historial Clínico (HC.pdf) ya está cargado desde {PDF_HC_PATH}.")
+            st.info("No se ha cargado ningún Protocolo de Reconstrucción Articular.")
 
-    # --- Sección de carga de Protocolo de Reconstrucción Articular (ahora en el cuerpo principal) ---
-    st.subheader("Cargar Protocolo de Reconstrucción Articular")
-    uploaded_protocol_file = st.file_uploader(
-        "Sube el archivo PDF del Protocolo de Reconstrucción Articular (Cadera/Rodilla)", 
-        type="pdf", 
-        key="protocol_uploader"
-    )
+        # --- Casilla de verificación para usar el protocolo (ahora en la columna izquierda) ---
+        st.session_state.use_protocol_for_analysis = st.checkbox(
+            "**✅ Complementar con el Protocolo**", # Texto más conciso
+            value=st.session_state.use_protocol_for_analysis,
+            help="Marca esta casilla si deseas que la IA use la información del protocolo cargado para responder a tu pregunta."
+        )
 
-    if uploaded_protocol_file is not None:
-        st.session_state.protocol_pdf_text = extract_text_from_pdf(uploaded_protocol_file)
-        if st.session_state.protocol_pdf_text:
-            st.success("Protocolo de Reconstrucción Articular cargado correctamente.")
-        else:
-            st.error("No se pudo extraer texto del Protocolo. Asegúrate de que el PDF sea de texto y no una imagen.")
-    elif 'protocol_pdf_text' in st.session_state and st.session_state.protocol_pdf_text:
-        st.info("Protocolo de Reconstrucción Articular cargado previamente.")
-    else:
-        st.info("No se ha cargado ningún Protocolo de Reconstrucción Articular.")
-
-    st.markdown("---")
-    
-    # --- Sección de entrada de texto ---
-    st.text_area(
-        "¿En qué puedo ayudarte?", 
-        value=st.session_state.get('question_input', ''), 
-        height=100,
-        placeholder="Ingrese su pregunta médica aquí...",
-        key="question_input"
-    )
-    
-    # --- Casilla de verificación para usar el protocolo ---
-    st.session_state.use_protocol_for_analysis = st.checkbox(
-        "**✅ Complementar con el Protocolo de Reconstrucción Articular**",
-        value=st.session_state.use_protocol_for_analysis,
-        help="Marca esta casilla si deseas que la IA use la información del protocolo cargado para responder a tu pregunta."
-    )
-
-    # --- Botón principal de consulta ---
-    st.button(
-        "🔍 Analizar con iTziA", 
-        type="primary", 
-        key="main_button",
-        on_click=on_analyze_click
-    )
-    
-    # --- Mostrar respuesta si existe ---
-    if st.session_state.last_response:
-        st.markdown("---")
-        st.markdown("### Respuesta")
-        st.markdown(st.session_state.last_response)
-
-    # --- Barra lateral con instrucciones (se mantiene aquí, pero se puede mover si se desea) ---
-    st.sidebar.markdown("""
-    <div style="background: #f8f9fa;  
-                padding: 15px;  
-                border-radius: 8px;  
-                border-left: 4px solid #4a6fa5;
-                margin-top: 20px;">
-        <h3 style="color: #3a5a80; margin-top:0;">Instrucciones</h3>
-        <ol style="color: #495057;">
-            <li style="margin-bottom: 8px;">🔔 La información es extraída de fuentes autorizadas por iTziA.</li>
-            <li style="margin-bottom: 8px;">⬆️ Sube el PDF del **Protocolo** en la sección principal. El Historial Clínico (HC.pdf) se carga automáticamente.</li>
-            <li style="margin-bottom: 8px;">⌨️ Escribe tu consulta en el área de texto.</li>
-            <li style="margin-bottom: 8px;">🤝 Marca la casilla para que iTziA use el Protocolo en su análisis.</li>
-        </ol>
-    </div>
-    """, unsafe_allow_html=True)
+    with col_right:
+        # --- Barra lateral con instrucciones (ahora en la columna derecha principal) ---
+        st.markdown("""
+        <div style="background: #f8f9fa;  
+                    padding: 15px;  
+                    border-radius: 8px;  
+                    border-left: 4px solid #4a6fa5;
+                    margin-bottom: 20px;">
+            <h3 style="color: #3a5a80; margin-top:0;">Instrucciones de Uso</h3>
+            <ol style="color: #495057;">
+                <li style="margin-bottom: 8px;">**1. Preparación de Documentos:** El **Historial Clínico (HC.pdf)** se carga automáticamente. Para un análisis más profundo, sube un **Protocolo de Reconstrucción Articular** en el panel izquierdo.</li>
+                <li style="margin-bottom: 8px;">**2. Complementar Análisis:** Si deseas que iTziA combine la información del HC con el Protocolo, asegúrate de **marcar la casilla** '✅ Complementar con el Protocolo' en la columna izquierda.</li>
+                <li style="margin-bottom: 8px;">**3. Escribe tu Consulta:** Ingresa tu pregunta médica en el área de texto.</li>
+                <li style="margin-bottom: 8px;">**4. Obtén tu Análisis:** Haz clic en '🔍 Analizar con iTziA' para recibir una respuesta basada en los documentos disponibles.</li>
+                <li style="margin-bottom: 8px;">🔔 **Nota Importante:** La información es extraída de las fuentes autorizadas que proporciones.</li>
+            </ol>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # --- Sección de entrada de texto ---
+        st.text_area(
+            "¿En qué puedo ayudarte?", 
+            value=st.session_state.get('question_input', ''), 
+            height=150, # Aumenta la altura para mayor visibilidad
+            placeholder="Ingrese su pregunta médica aquí...",
+            key="question_input"
+        )
+        
+        # --- Botón principal de consulta ---
+        st.button(
+            "🔍 Analizar con iTziA", 
+            type="primary", 
+            key="main_button",
+            on_click=on_analyze_click
+        )
+        
+        # --- Mostrar respuesta si existe ---
+        if st.session_state.last_response:
+            st.markdown("---")
+            st.markdown("### Respuesta")
+            st.markdown(st.session_state.last_response)
 
 
 if __name__ == "__main__":
